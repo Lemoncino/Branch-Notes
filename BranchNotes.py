@@ -46,9 +46,9 @@ exploreframe.grid(row=1,
                     pady=20)
 
 #Logo
-logo = CTkImage(light_image=Image.open("images/BNnobg.png"),
-                dark_image=Image.open("images/BNnobg.png"),
-                size=(800,200))
+logo = CTkImage(light_image=Image.open("images/BNlogo.png"),
+                dark_image=Image.open("images/BNlogo.png"),
+                size=(400, 110))
 logo_label = CTkLabel(logoframe,
                       text="",
                       image=logo,
@@ -89,6 +89,41 @@ img_delete = CTkImage(light_image=Image.open("images/del.png"),
                    dark_image=Image.open("images/del.png"),
                    size=(25,20))
 
+def check_max_branches():
+    count = 0
+    item = branches.selection()[0]
+    children = len(branches.get_children(item))
+
+    if branches.item(item).get("values") == ['root']:
+        if children == 5:
+            tkinter.messagebox.showinfo("Error", "Maximum amount of sub-branches: 5")
+            return True
+        else:
+            return False
+    elif branches.item(item).get("values") == ['sub']:
+        if len(children) == 5:
+            tkinter.messagebox.showinfo("Error", "Maximum amount of sub-branches: 5")
+            return True
+        elif len(branches.get_children(branches.parent(item))) == 5:
+            tkinter.messagebox.showinfo("Error", "Maximum amount of sub-branches: 5")
+            return True
+        elif len(children) > 0:
+            while len(children) > 0:
+                count += 1
+                item = branches.get_children(item)[0]
+                children = branches.get_children(item)
+                if count == 5:
+                    tkinter.messagebox.showinfo("Error", "Maximum amount of sub-branches in line: 5")
+                    return True
+
+        while branches.parent(item) is not "":
+            count += 1
+            if count == 5:
+                tkinter.messagebox.showinfo("Error", "Maximum amount of sub-branches in line: 5")
+                return True
+            item = branches.parent(item)
+            
+    
 def new():
     if bb_menu.get() == "Root Branch":
         iid = branches.insert("", tkinter.END, text="Root Branch", values="root")
@@ -97,14 +132,15 @@ def new():
 
     elif bb_menu.get() == "Sub-Branch":
             if branches.focus():
-                item = branches.selection()[0]
+                if not check_max_branches():
+                    item = branches.selection()[0]
 
-                if item and branches.item(item).get("values") == ['root'] or branches.item(item).get("values") == ['sub']:
-                    iid = branches.insert(item, tkinter.END, text="Sub Branch", values="sub")
-                    db.execute("INSERT INTO branches (iid, name, parent_id, value) VALUES (?, ?, ?, ?)", (iid, "Sub-Branch", item, "sub"))
-                    connection.commit()
-                else:
-                    tkinter.messagebox.showinfo("Error", "You need to select a parent branch to create a sub-branch")
+                    if item and branches.item(item).get("values") == ['root'] or branches.item(item).get("values") == ['sub']:
+                        iid = branches.insert(item, tkinter.END, text="Sub Branch", values="sub")
+                        db.execute("INSERT INTO branches (iid, name, parent_id, value) VALUES (?, ?, ?, ?)", (iid, "Sub-Branch", item, "sub"))
+                        connection.commit()
+                    else:
+                        tkinter.messagebox.showinfo("Error", "You need to select a parent branch to create a sub-branch")
             else:
                 tkinter.messagebox.showinfo("Error", "You need to select a parent branch to create a sub-branch")
 
@@ -152,9 +188,19 @@ def load():
 
 def delete():
     item = branches.selection()[0]
+    if "selected_note" in globals() and branches.exists(selected_note):
+        if branches.parent(selected_note):
+            parent_branch = branches.parent(selected_note)
+    if branches.item(item).get("values") == ['root'] or branches.item(item).get("values") == ['sub']:
+        db.execute("DELETE FROM branches WHERE iid = ?", (item,))
+    else:
+        db.execute("DELETE FROM notes WHERE iid = ?", (item,))
+        textbox.pack_forget()
     branches.delete(item)
-    db.execute("DELETE FROM branches WHERE iid = ?", (item,))
     connection.commit()
+    if not branches.exists(parent_branch):
+        textbox.pack_forget()
+
 
 def rename(event):
     #Getting selected treeview item
@@ -171,6 +217,7 @@ def rename(event):
         edit_entry = tkinter.Entry(branches,
                                bg="#2b2b2b",
                                fg="white",
+                               font=("Terminal", 13),
                                width=box[2])
         
         #Inserting current item's text inside of entry widget
@@ -206,31 +253,47 @@ def rename(event):
     
 branches.bind("<Double-1>", rename)
 
-bb_new = CTkButton(branch_buttons, bg_color="#2b2b2b", fg_color="#2b2b2b", text="", width=50, image=img_new, command=new)
-bb_load = CTkButton(branch_buttons, bg_color="#2b2b2b", fg_color="#2b2b2b", text="", width=50, image=img_save, command=load)
-bb_delete = CTkButton(branch_buttons, bg_color="#2b2b2b", fg_color="#2b2b2b", text="", width=50, image=img_delete, command=delete)
+bb_new = CTkButton(branch_buttons, bg_color="#2b2b2b",
+                                   fg_color="#2b2b2b", 
+                                   hover_color="#424242",
+                                   text="", 
+                                   width=50,
+                                   image=img_new,
+                                   corner_radius=0,
+                                   command=new)
+
+bb_delete = CTkButton(branch_buttons, bg_color="#2b2b2b", 
+                                      fg_color="#2b2b2b", 
+                                      hover_color="#424242",
+                                      text="", width=50, 
+                                      image=img_delete, 
+                                      corner_radius=0,
+                                      command=delete)
 
 #Menu
 bb_menu = CTkOptionMenu(branch_buttons,
                         bg_color="#2b2b2b",
                         fg_color="#2b2b2b",
                         button_color="#383838",
+                        button_hover_color="#424242",
                         font=("Terminal", 12),
                         dropdown_font=("Terminal", 12),
                         corner_radius=0,
                         values=["Root Branch", "Sub-Branch", "Note"])
 
 #Textbox
-textbox = CTkTextbox(textframe)
+textbox = CTkTextbox(textframe,
+                     corner_radius=0,
+                     font=("Terminal", 17)) 
 def show_textbox(event):
     global selected_note
     item = branches.selection()[0]
-    selected_note = item
     if branches.item(item).get("values") == ['note'] and branches.identify_element(event.x, event.y) == "text":
+        selected_note = item
         textbox.delete("1.0", "end")
         db.execute("SELECT content FROM notes WHERE iid = ?", (item,))
         content = db.fetchone()
-        if content:
+        if content[0]:
             text_content = content[0]
             text_content = text_content.replace("{", "").replace("}", "")
             textbox.insert("1.0", text_content)
@@ -259,8 +322,6 @@ textbox.bind("<Key>", typing)
 
 bb_new.grid(row=0,
             column=1)
-bb_load.grid(row=0,
-             column=2)
 bb_delete.grid(row=0,
                column=3)
 bb_menu.grid(row=0,
@@ -269,4 +330,5 @@ bb_menu.grid(row=0,
 branches.pack(expand=True,
               fill=BOTH)
 
+load()
 root.mainloop()
