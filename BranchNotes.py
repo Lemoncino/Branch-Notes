@@ -20,7 +20,7 @@ connection.execute("PRAGMA foreign_keys = ON")
 # Initializing cursor
 db = connection.cursor()
 
-# Function to check if limit of sub-branches has been exceeded (5)
+# Function to check if limit of sub-branches has been exceeded (7)
 def check_max_branches():
     item = branches.selection()[0]
     count = 0
@@ -53,9 +53,9 @@ def check_max_branches():
     
     count = count_children(item)
     
-    # Check if amount of branches exceeds limit (5)
-    if count >= 5:
-        tkinter.messagebox.showinfo("Error", "Maximum amount of sub-branches per root-branch: 5")
+    # Check if amount of branches exceeds limit (7)
+    if count >= 7:
+        tkinter.messagebox.showinfo("Error", "Maximum amount of sub-branches per root-branch: 7")
         return True 
 
 # Function to create new item in treeview
@@ -203,7 +203,7 @@ def rename(event):
         # Function to update treeview item text and to delete entry widget afterwards
         def enter_pressed():
             new_text = edit_entry.get().strip()
-            if len(new_text) < 20:
+            if len(new_text) < 25:
                 branches.item(item, text=new_text)
 
                 # Checking if item is a branch or a note, then updating name in database
@@ -216,7 +216,7 @@ def rename(event):
 
                 edit_entry.destroy()
             else:
-                tkinter.messagebox.showinfo("Error", "Maximum amount of characters exceeded: 20")
+                tkinter.messagebox.showinfo("Error", "Maximum amount of characters exceeded: 25")
 
     
         # Binding events (enter key, focusing out of widget) to entry widget
@@ -276,9 +276,9 @@ def typing(event):
 
 # Configuring application geometry
 root = CTk()
-root.geometry("800x800")
+root.geometry("1000x800")
 root.title("Branch Notes")
-root.columnconfigure(0, weight=0)
+root.columnconfigure(0, weight=1)
 root.columnconfigure(1, weight=2)
 root.rowconfigure(1, weight=1)
 
@@ -328,15 +328,16 @@ logo_label.pack(expand=True,
 
 # Frame for buttons
 branch_buttons = CTkFrame(exploreframe,
-                          height=40)
+                          height=40,
+                          fg_color="#2b2b2b")
 
 # Images for buttons
-img_new = CTkImage(light_image=Image.open("images/new.png"),
-                   dark_image=Image.open("images/new.png"),
+img_new = CTkImage(light_image=Image.open("images/plus.png"),
+                   dark_image=Image.open("images/plus.png"),
                    size=(25, 20))
 
-img_delete = CTkImage(light_image=Image.open("images/del.png"),
-                      dark_image=Image.open("images/del.png"),
+img_delete = CTkImage(light_image=Image.open("images/x.png"),
+                      dark_image=Image.open("images/x.png"),
                       size=(25, 20))
 
 # Buttons
@@ -381,8 +382,9 @@ branchestyle.configure("Treeview",
 
 branches = ttk.Treeview(exploreframe,
                         show="tree",
-                        selectmode=tkinter.BROWSE,
+                        selectmode=tkinter.BROWSE
                         )
+
 
 # Placing Treeview
 branches.pack(expand=True,
@@ -407,12 +409,13 @@ bb_menu.grid(row=0,
 
 # Textbox
 textbox = CTkTextbox(textframe,
+                     wrap=WORD,
                      corner_radius=0,
                      font=("Terminal", 17)) 
 
 
 # Event Bindings
-branches.bind("<Double-1>", rename)
+branches.bind("<Triple-1>", rename)
 
 branches.bind("<ButtonRelease-1>", show_textbox)
 
