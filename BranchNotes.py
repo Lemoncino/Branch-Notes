@@ -61,6 +61,10 @@ def check_max_branches():
 # Function to create new item in treeview
 def new():
 
+    # Check if maximum amount of 200 items has been exceeded
+    if len(branches.get_children()) > 200:
+        tkinter.messagebox.showinfo("Error", "Maximum amount of elements exceeded: 200")
+
     # Check what item is selected in the menu
     if bb_menu.get() == "Root Branch":
 
@@ -182,7 +186,7 @@ def rename(event):
 
         # Creating entry widget to enter new text
         edit_entry = tkinter.Entry(branches,
-                                   bg="# 2b2b2b",
+                                   bg="#2b2b2b",
                                    fg="white",
                                    font=("Terminal", 13),
                                    width=box[2])
@@ -199,17 +203,21 @@ def rename(event):
         # Function to update treeview item text and to delete entry widget afterwards
         def enter_pressed():
             new_text = edit_entry.get().strip()
-            branches.item(item, text=new_text)
+            if len(new_text) < 20:
+                branches.item(item, text=new_text)
 
-            # Checking if item is a branch or a note, then updating name in database
-            if branches.item(item).get("values") == ['root'] or branches.item(item).get("values") == ['sub']:
-                db.execute("UPDATE branches SET name = ? WHERE iid = ?", (new_text, item,))
-                connection.commit()
+                # Checking if item is a branch or a note, then updating name in database
+                if branches.item(item).get("values") == ['root'] or branches.item(item).get("values") == ['sub']:
+                    db.execute("UPDATE branches SET name = ? WHERE iid = ?", (new_text, item,))
+                    connection.commit()
+                else:
+                    db.execute("UPDATE notes SET name = ? WHERE iid = ?", (new_text, item,))
+                    connection.commit()
+
+                edit_entry.destroy()
             else:
-                db.execute("UPDATE notes SET name = ? WHERE iid = ?", (new_text, item,))
-                connection.commit()
+                tkinter.messagebox.showinfo("Error", "Maximum amount of characters exceeded: 20")
 
-            edit_entry.destroy()
     
         # Binding events (enter key, focusing out of widget) to entry widget
         edit_entry.bind("<Return>", lambda event: enter_pressed())
@@ -268,11 +276,15 @@ def typing(event):
 
 # Configuring application geometry
 root = CTk()
-root.geometry("1000x900")
+root.geometry("800x800")
 root.title("Branch Notes")
 root.columnconfigure(0, weight=0)
 root.columnconfigure(1, weight=2)
 root.rowconfigure(1, weight=1)
+
+# App icon
+icon = ImageTk.PhotoImage(file="images/icon.png")
+root.iconphoto(True, icon)
 
 
 # Frames
@@ -301,7 +313,7 @@ exploreframe.grid(row=1,
                   padx=20,
                   pady=20)
 
-# Logo
+# Logo image and label
 logo = CTkImage(light_image=Image.open("images/BNlogo.png"),
                 dark_image=Image.open("images/BNlogo.png"),
                 size=(400, 110))
@@ -328,18 +340,18 @@ img_delete = CTkImage(light_image=Image.open("images/del.png"),
                       size=(25, 20))
 
 # Buttons
-bb_new = CTkButton(branch_buttons, bg_color="# 2b2b2b",
-                                   fg_color="# 2b2b2b",
-                                   hover_color="# 424242",
+bb_new = CTkButton(branch_buttons, bg_color="#2b2b2b",
+                                   fg_color="#2b2b2b",
+                                   hover_color="#424242",
                                    text="",
                                    width=50,
                                    image=img_new,
                                    corner_radius=0,
                                    command=new)
 
-bb_delete = CTkButton(branch_buttons, bg_color="# 2b2b2b", 
-                                      fg_color="# 2b2b2b", 
-                                      hover_color="# 424242",
+bb_delete = CTkButton(branch_buttons, bg_color="#2b2b2b", 
+                                      fg_color="#2b2b2b", 
+                                      hover_color="#424242",
                                       text="", width=50, 
                                       image=img_delete, 
                                       corner_radius=0,
@@ -360,9 +372,9 @@ bb_delete.grid(row=0,
 branchestyle = ttk.Style()
 branchestyle.theme_use("default")
 branchestyle.configure("Treeview",
-                        background="# 2b2b2b",
+                        background="#2b2b2b",
                         foreground="white",
-                        fieldbackground="# 2b2b2b",
+                        fieldbackground="#2b2b2b",
                         rowheight=30,
                         font=("Terminal", 12),
                         borderwidth=0)
@@ -379,10 +391,10 @@ branches.pack(expand=True,
 
 # Menu
 bb_menu = CTkOptionMenu(branch_buttons,
-                        bg_color="# 2b2b2b",
-                        fg_color="# 2b2b2b",
-                        button_color="# 383838",
-                        button_hover_color="# 424242",
+                        bg_color="#2b2b2b",
+                        fg_color="#2b2b2b",
+                        button_color="#383838",
+                        button_hover_color="#424242",
                         font=("Terminal", 12),
                         dropdown_font=("Terminal", 12),
                         corner_radius=0,
