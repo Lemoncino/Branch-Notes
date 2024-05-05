@@ -1,3 +1,11 @@
+"""Branch Notes.
+
+Application for branched study notes.
+Create branches, sub-branches, and organize your notes with your preferred hierarchy.
+Features include renaming notes and branches, as well as automatic loading from the database.
+More features yet to come.
+"""
+
 import tkinter.messagebox
 from customtkinter import *
 import tkinter
@@ -5,75 +13,75 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 import sqlite3
 
-#Connecting sqlite database
+# Connecting sqlite database
 connection = sqlite3.connect("databases/branches.db")
-#Turning foreign key constraints on
+# Turning foreign key constraints on
 connection.execute("PRAGMA foreign_keys = ON")
-#Initializing cursor
+# Initializing cursor
 db = connection.cursor()
 
-#Function to check if limit of sub-branches has been exceeded (5)
+# Function to check if limit of sub-branches has been exceeded (5)
 def check_max_branches():
     item = branches.selection()[0]
     count = 0
 
-    #Go to root branch of any selected branch
+    # Go to root branch of any selected branch
     while branches.parent(item) != "":
         item = branches.parent(item)
 
-    #Recursive function to traverse whole tree and count number of branches
+    # Recursive function to traverse whole tree and count number of branches
     def count_children(item):
 
         nonlocal count
 
         count += 1
 
-        #Get children of current item
+        # Get children of current item
         children = branches.get_children(item)
 
-        #Recursively traverse sub-branches
+        # Recursively traverse sub-branches
         for child in children:
 
-            #Decrementing count to not include notes
+            # Decrementing count to not include notes
             if branches.item(child).get("values") == ['note']:
                 count -= 1
 
             count_children(child)
         
-        #Excluding initial item from the count
+        # Excluding initial item from the count
         return count - 1
     
     count = count_children(item)
     
-    #Check if amount of branches exceeds limit (5)
+    # Check if amount of branches exceeds limit (5)
     if count >= 5:
         tkinter.messagebox.showinfo("Error", "Maximum amount of sub-branches per root-branch: 5")
         return True 
 
-#Function to create new item in treeview
+# Function to create new item in treeview
 def new():
 
-    #Check what item is selected in the menu
+    # Check what item is selected in the menu
     if bb_menu.get() == "Root Branch":
 
-        #Create item and execute database query
+        # Create item and execute database query
         iid = branches.insert("", tkinter.END, text="Root Branch", values="root")
         db.execute("INSERT INTO branches (iid, name, value) VALUES (?, ?, ?)", (iid, "Root Branch", "root"))
         connection.commit()
 
     elif bb_menu.get() == "Sub-Branch":
             
-            #Check if a branch is selected to be parent of the new sub-branch
+            # Check if a branch is selected to be parent of the new sub-branch
             if branches.focus():
                 item = branches.selection()[0]
 
-                #Check if selected item is a branch
+                # Check if selected item is a branch
                 if item and branches.item(item).get("values") == ['root'] or branches.item(item).get("values") == ['sub']:
 
-                    #Check if branch limit isn't exceeded
+                    # Check if branch limit isn't exceeded
                     if not check_max_branches():
 
-                        #Create item and execute database query
+                        # Create item and execute database query
                         iid = branches.insert(item, tkinter.END, text="Sub Branch", values="sub")
                         db.execute("INSERT INTO branches (iid, name, parent_id, value) VALUES (?, ?, ?, ?)", (iid, "Sub-Branch", item, "sub"))
                         connection.commit()
@@ -94,59 +102,59 @@ def new():
             else:
                 tkinter.messagebox.showinfo("Error", "You need to select a branch to create a note")
 
-#Function to load data from database
+# Function to load data from database
 def load():
 
-    #Fetch data from database
+    # Fetch data from database
     db.execute("SELECT * FROM branches")
     branchs = db.fetchall()
     db.execute("SELECT * FROM notes")
     notes = db.fetchall()
 
-    #Check if any branches exist
-    #Branch and note creation are not separated as to mantain exact item order in treeview
+    # Check if any branches exist
+    # Branch and note creation are not separated as to mantain exact item order in treeview
     if branchs:
 
-        #Create branch by extracting data from database
+        # Create branch by extracting data from database
         for branch in branchs:
             iid = branch[0]
             name = branch[1]
             parent = branch[2]
             value = branch[3]
 
-            #Check if branch is a root branch (no parent)
+            # Check if branch is a root branch (no parent)
             if parent is None:
                 parent = ""
                 
             branches.insert(parent, tkinter.END, iid, text=name, values=value)
 
-            #Check if any notes exist
+            # Check if any notes exist
             if notes:
 
-                #Create note by extracting data from database
+                # Create note by extracting data from database
                 for note in notes:
                     iid = note[0]
                     name = note[1]
                     branch_id = note[3]
                     value = note[4]
 
-                    #Before creating note, check if parent branch exists
+                    # Before creating note, check if parent branch exists
                     if branches.exists(branch_id):
                         if not branches.exists(iid):
                             branches.insert(branch_id, tkinter.END, iid, text=name, values=value)
 
-#Function to delete items in treeview
+# Function to delete items in treeview
 def delete():
     item = branches.selection()[0]
 
-    #Check if a note is currently selected and displayed
+    # Check if a note is currently selected and displayed
     if "selected_note" in globals() and branches.exists(selected_note):
 
-        #Check if note's parent branch exists
+        # Check if note's parent branch exists
         if branches.parent(selected_note):
             parent_branch = branches.parent(selected_note)
     
-    #Check if selected item is a branch or a note, delete from database accordingly and hide textbox if deleted item is a note
+    # Check if selected item is a branch or a note, delete from database accordingly and hide textbox if deleted item is a note
     if branches.item(item).get("values") == ['root'] or branches.item(item).get("values") == ['sub']:
         db.execute("DELETE FROM branches WHERE iid = ?", (item,))
     else:
@@ -156,44 +164,44 @@ def delete():
     branches.delete(item)
     connection.commit()
 
-    #If note's parent branch is deleted, hide textbox
+    # If note's parent branch is deleted, hide textbox
     if not branches.exists(parent_branch):
         textbox.pack_forget()
 
-#Function to rename items in treeview
+# Function to rename items in treeview
 def rename(event):
-    #Getting selected treeview item
+    # Getting selected treeview item
     item = branches.selection()[0]
 
     if item:
-        #Getting current text of treeview item
+        # Getting current text of treeview item
         old_text = branches.item(item).get("text")
 
-        #Getting dimension of treeview item (cell)
+        # Getting dimension of treeview item (cell)
         box = branches.bbox(item)
 
-        #Creating entry widget to enter new text
+        # Creating entry widget to enter new text
         edit_entry = tkinter.Entry(branches,
-                               bg="#2b2b2b",
-                               fg="white",
-                               font=("Terminal", 13),
-                               width=box[2])
-        
-        #Inserting current item's text inside of entry widget
+                                   bg="# 2b2b2b",
+                                   fg="white",
+                                   font=("Terminal", 13),
+                                   width=box[2])
+
+        # Inserting current item's text inside of entry widget
         edit_entry.insert(0, old_text)
 
-        #Selecting all characters inside entry widget
+        # Selecting all characters inside entry widget
         edit_entry.select_range(0, tkinter.END)
 
-        #Setting focus to entry wdiget
+        # Setting focus to entry wdiget
         edit_entry.focus()
 
-        #Function to update treeview item text and to delete entry widget afterwards
+        # Function to update treeview item text and to delete entry widget afterwards
         def enter_pressed():
             new_text = edit_entry.get().strip()
             branches.item(item, text=new_text)
 
-            #Checking if item is a branch or a note, then updating name in database
+            # Checking if item is a branch or a note, then updating name in database
             if branches.item(item).get("values") == ['root'] or branches.item(item).get("values") == ['sub']:
                 db.execute("UPDATE branches SET name = ? WHERE iid = ?", (new_text, item,))
                 connection.commit()
@@ -203,32 +211,32 @@ def rename(event):
 
             edit_entry.destroy()
     
-        #Binding events (enter key, focusing out of widget) to entry widget
+        # Binding events (enter key, focusing out of widget) to entry widget
         edit_entry.bind("<Return>", lambda event: enter_pressed())
         edit_entry.bind("<FocusOut>", lambda event: edit_entry.destroy())
 
-        #Placing entry widget on treeview item's coordinates
+        # Placing entry widget on treeview item's coordinates
         edit_entry.place(x=box[0], y=box[1], width=box[2], height=box[3])
 
-#Function to display textbot with content of selected note
+# Function to display textbot with content of selected note
 def show_textbox(event):
-    #Making selected_note global to correctly close textbox upon deletion of parent branch
+    # Making selected_note global to correctly close textbox upon deletion of parent branch
     global selected_note
 
     item = branches.selection()[0]
 
-    #Check if selected item is a note and if user clicked directly on the note's name
+    # Check if selected item is a note and if user clicked directly on the note's name
     if branches.item(item).get("values") == ['note'] and branches.identify_element(event.x, event.y) == "text":
         selected_note = item
 
-        #Deleting current content from textbox
+        # Deleting current content from textbox
         textbox.delete("1.0", "end")
 
-        #Fetching note content from database
+        # Fetching note content from database
         db.execute("SELECT content FROM notes WHERE iid = ?", (item,))
         content = db.fetchone()
 
-        #If content is present, insert into textbox
+        # If content is present, insert into textbox
         if content[0]:
             text_content = content[0]
             text_content = text_content.replace("{", "").replace("}", "")
@@ -236,29 +244,29 @@ def show_textbox(event):
         else:
             textbox.insert("1.0", "")
 
-        #Display textbox if isn't currently displayed
+        # Display textbox if isn't currently displayed
         if not textbox.winfo_ismapped():
             textbox.pack(expand=True,
                         fill=BOTH)
 
-#Function to store textbox content in database
+# Function to store textbox content in database
 def typing(event):
 
-    #Function that executes database queries
+    # Function that executes database queries
     def save_text():
         db.execute("UPDATE notes SET content = NULL WHERE iid = ?", (selected_note,))
         new_text = textbox.get("1.0", "end")
         db.execute("UPDATE notes SET content = ? WHERE iid = ?", (new_text, selected_note,))
         connection.commit()
 
-    #Schedule saving of textbox content upon keypress (500ms)
-    #(Adapted from ChatGPT) If content save scheduled and another key is pressed (meaning typing function is called), restart save timer
+    # Schedule saving of textbox content upon keypress (500ms)
+    # (Adapted from ChatGPT) If content save scheduled and another key is pressed (meaning typing function is called), restart save timer
     if hasattr(typing, "after_id"):             
         root.after_cancel(typing.after_id)
     typing.after_id = root.after(500, save_text)
 
 
-#Configuring application geometry
+# Configuring application geometry
 root = CTk()
 root.geometry("1000x900")
 root.title("Branch Notes")
@@ -267,33 +275,33 @@ root.columnconfigure(1, weight=2)
 root.rowconfigure(1, weight=1)
 
 
-#Frames
+# Frames
 logoframe = CTkFrame(root)
 textframe = CTkFrame(root)
 exploreframe = CTkFrame(root)
 
-#Placing Frames
+# Placing Frames
 textframe.grid(row=1,
-                column=1,
-                sticky="nswe",
-                rowspan=3,
-                padx=20,
-                pady=20)
+               column=1,
+               sticky="nswe",
+               rowspan=3,
+               padx=20,
+               pady=20)
 logoframe.grid(row=0,
-                column=0,
-                sticky="nswe",
-                columnspan=2,
-                rowspan=1,
-                padx=20,
-                pady=20)
+               column=0,
+               sticky="nswe",
+               columnspan=2,
+               rowspan=1,
+               padx=20,
+               pady=20)
 exploreframe.grid(row=1,
-                    column=0,
-                    sticky="nswe",
-                    rowspan=3,
-                    padx=20,
-                    pady=20)
+                  column=0,
+                  sticky="nswe",
+                  rowspan=3,
+                  padx=20,
+                  pady=20)
 
-#Logo
+# Logo
 logo = CTkImage(light_image=Image.open("images/BNlogo.png"),
                 dark_image=Image.open("images/BNlogo.png"),
                 size=(400, 110))
@@ -302,58 +310,59 @@ logo_label = CTkLabel(logoframe,
                       image=logo,
                       compound=LEFT)
 
-#Placing Logo
+# Placing Logo
 logo_label.pack(expand=True,
                 fill=BOTH)
 
-#Frame for buttons
+# Frame for buttons
 branch_buttons = CTkFrame(exploreframe,
                           height=40)
 
-#Images for buttons
+# Images for buttons
 img_new = CTkImage(light_image=Image.open("images/new.png"),
                    dark_image=Image.open("images/new.png"),
-                   size=(25,20))
-img_delete = CTkImage(light_image=Image.open("images/del.png"),
-                   dark_image=Image.open("images/del.png"),
-                   size=(25,20))
+                   size=(25, 20))
 
-#Buttons
-bb_new = CTkButton(branch_buttons, bg_color="#2b2b2b",
-                                   fg_color="#2b2b2b", 
-                                   hover_color="#424242",
-                                   text="", 
+img_delete = CTkImage(light_image=Image.open("images/del.png"),
+                      dark_image=Image.open("images/del.png"),
+                      size=(25, 20))
+
+# Buttons
+bb_new = CTkButton(branch_buttons, bg_color="# 2b2b2b",
+                                   fg_color="# 2b2b2b",
+                                   hover_color="# 424242",
+                                   text="",
                                    width=50,
                                    image=img_new,
                                    corner_radius=0,
                                    command=new)
 
-bb_delete = CTkButton(branch_buttons, bg_color="#2b2b2b", 
-                                      fg_color="#2b2b2b", 
-                                      hover_color="#424242",
+bb_delete = CTkButton(branch_buttons, bg_color="# 2b2b2b", 
+                                      fg_color="# 2b2b2b", 
+                                      hover_color="# 424242",
                                       text="", width=50, 
                                       image=img_delete, 
                                       corner_radius=0,
                                       command=delete)
 
-#Placing Buttons Frame
+# Placing Buttons Frame
 branch_buttons.pack(side=TOP,
                     fill="x")
 
-#Placing buttons
+# Placing buttons
 bb_new.grid(row=0,
             column=1)
 bb_delete.grid(row=0,
                column=3)
 
 
-#Treeview
+# Treeview
 branchestyle = ttk.Style()
 branchestyle.theme_use("default")
 branchestyle.configure("Treeview",
-                        background="#2b2b2b",
+                        background="# 2b2b2b",
                         foreground="white",
-                        fieldbackground="#2b2b2b",
+                        fieldbackground="# 2b2b2b",
                         rowheight=30,
                         font=("Terminal", 12),
                         borderwidth=0)
@@ -363,37 +372,34 @@ branches = ttk.Treeview(exploreframe,
                         selectmode=tkinter.BROWSE,
                         )
 
-#Placing Treeview
+# Placing Treeview
 branches.pack(expand=True,
               fill=BOTH)
 
 
-
-
-
-#Menu
+# Menu
 bb_menu = CTkOptionMenu(branch_buttons,
-                        bg_color="#2b2b2b",
-                        fg_color="#2b2b2b",
-                        button_color="#383838",
-                        button_hover_color="#424242",
+                        bg_color="# 2b2b2b",
+                        fg_color="# 2b2b2b",
+                        button_color="# 383838",
+                        button_hover_color="# 424242",
                         font=("Terminal", 12),
                         dropdown_font=("Terminal", 12),
                         corner_radius=0,
                         values=["Root Branch", "Sub-Branch", "Note"])
 
-#Placing Menu
+# Placing Menu
 bb_menu.grid(row=0,
             column=0)
 
 
-#Textbox
+# Textbox
 textbox = CTkTextbox(textframe,
                      corner_radius=0,
                      font=("Terminal", 17)) 
 
 
-#Event Bindings
+# Event Bindings
 branches.bind("<Double-1>", rename)
 
 branches.bind("<ButtonRelease-1>", show_textbox)
@@ -401,8 +407,8 @@ branches.bind("<ButtonRelease-1>", show_textbox)
 textbox.bind("<Key>", typing)
 
 
-#Loading data from database
+# Loading data from database
 load()
 
-#Main application loop
+# Main application loop
 root.mainloop()
