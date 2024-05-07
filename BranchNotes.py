@@ -25,35 +25,25 @@ def main_app():
     def check_max_branches():
         item = branches.selection()[0]
         count = 0
-
         # Go to root branch of any selected branch
         while branches.parent(item) != "":
             item = branches.parent(item)
-
         # Recursive function to traverse whole tree and count number of branches
         def count_children(item):
-
             nonlocal count
-
             count += 1
-
             # Get children of current item
             children = branches.get_children(item)
 
             # Recursively traverse sub-branches
             for child in children:
-
                 # Decrementing count to not include notes
                 if branches.item(child).get("values") == ['note']:
                     count -= 1
-
-                count_children(child)
-            
+                count_children(child)           
             # Excluding initial item from the count
             return count - 1
-        
-        count = count_children(item)
-        
+        count = count_children(item)        
         # Check if amount of branches exceeds limit (7)
         if count >= 7:
             tkinter.messagebox.showinfo("Error", "Maximum amount of sub-branches per root-branch: 7")
@@ -68,7 +58,6 @@ def main_app():
 
         # Check what item is selected in the menu
         if bb_menu.get() == "Root Branch":
-
             # Create item and execute database query
             iid = branches.insert("", tkinter.END, text="Root Branch", values="root")
             db.execute("INSERT INTO branches (iid, name, value) VALUES (?, ?, ?)", (iid, "Root Branch", "root"))
@@ -79,13 +68,10 @@ def main_app():
                 # Check if a branch is selected to be parent of the new sub-branch
                 if branches.focus():
                     item = branches.selection()[0]
-
                     # Check if selected item is a branch
                     if item and branches.item(item).get("values") == ['root'] or branches.item(item).get("values") == ['sub']:
-
                         # Check if branch limit isn't exceeded
                         if not check_max_branches():
-
                             # Create item and execute database query
                             iid = branches.insert(item, tkinter.END, text="Sub Branch", values="sub")
                             db.execute("INSERT INTO branches (iid, name, parent_id, value) VALUES (?, ?, ?, ?)", (iid, "Sub-Branch", item, "sub"))
@@ -119,7 +105,6 @@ def main_app():
         # Check if any branches exist
         # Branch and note creation are not separated as to mantain exact item order in treeview
         if branchs:
-
             # Create branch by extracting data from database
             for branch in branchs:
                 iid = branch[0]
@@ -135,14 +120,12 @@ def main_app():
 
                 # Check if any notes exist
                 if notes:
-
                     # Create note by extracting data from database
                     for note in notes:
                         iid = note[0]
                         name = note[1]
                         branch_id = note[3]
                         value = note[4]
-
                         # Before creating note, check if parent branch exists
                         if branches.exists(branch_id):
                             if not branches.exists(iid):
@@ -284,9 +267,20 @@ def main_app():
     root.rowconfigure(1, weight=1)
 
     # App icon
-    icon = ImageTk.PhotoImage(file="images/icon.png")
-    root.iconphoto(True, icon)
+    root.iconbitmap("images/icon.ico")
 
+    # App background
+    image = Image.open("images/app_wallpaper.jpg")
+
+    bg = ctk.CTkImage(light_image=image,
+                      dark_image=image,
+                      size=(2000, 2000))
+    
+    bg_label = ctk.CTkLabel(root,
+                            image=bg)
+    bg_label.place(x=0,
+                   y=0)
+    
 
     # Frames
     logoframe = ctk.CTkFrame(root)
@@ -295,69 +289,67 @@ def main_app():
 
     # Placing Frames
     textframe.grid(row=1,
-                column=1,
-                sticky="nswe",
-                rowspan=3,
-                padx=20,
-                pady=20)
+                   column=1,
+                   sticky="nswe",
+                   rowspan=3,
+                   padx=20,
+                   pady=20)
     logoframe.grid(row=0,
-                column=0,
-                sticky="nswe",
-                columnspan=2,
-                rowspan=1,
-                padx=20,
-                pady=20)
+                   column=0,
+                   sticky="nswe",
+                   columnspan=2,
+                   rowspan=1,
+                   padx=20,
+                   pady=20)
     exploreframe.grid(row=1,
-                    column=0,
-                    sticky="nswe",
-                    rowspan=3,
-                    padx=20,
-                    pady=20)
+                      column=0,
+                      sticky="nswe",
+                      rowspan=3,
+                      padx=20,
+                      pady=20)
 
     # Logo image and label
     logo = ctk.CTkImage(light_image=Image.open("images/BNlogo.png"),
-                    dark_image=Image.open("images/BNlogo.png"),
-                    size=(400, 110))
+                        dark_image=Image.open("images/BNlogo.png"),
+                        size=(400, 110))
     logo_label = ctk.CTkLabel(logoframe,
-                          text="",
-                          image=logo,
-                          compound=ctk.LEFT)
-
-    # Placing Logo
+                              text="",
+                              image=logo,
+                              compound=ctk.LEFT)
     logo_label.pack(expand=True,
                     fill=ctk.BOTH)
 
     # Frame for buttons
     branch_buttons = ctk.CTkFrame(exploreframe,
-                              height=40,
-                              fg_color="#2b2b2b")
+                                  height=40,
+                                  fg_color="#2b2b2b")
 
     # Images for buttons
-    img_new = ctk.CTkImage(light_image=Image.open("images/plus.png"),
-                       dark_image=Image.open("images/plus.png"),
-                       size=(25, 20))
+    img_new = ctk.CTkImage(light_image=Image.open("images/new.png"),
+                           dark_image=Image.open("images/new.png"),
+                           size=(25, 20))
 
-    img_delete = ctk.CTkImage(light_image=Image.open("images/x.png"),
-                          dark_image=Image.open("images/x.png"),
-                          size=(25, 20))
+    img_delete = ctk.CTkImage(light_image=Image.open("images/delete.png"),
+                              dark_image=Image.open("images/delete.png"),
+                              size=(25, 20))
 
     # Buttons
     bb_new = ctk.CTkButton(branch_buttons, bg_color="#2b2b2b",
-                                       fg_color="#2b2b2b",
-                                       hover_color="#424242",
-                                       text="",
-                                       width=50,
-                                       image=img_new,
-                                       corner_radius=0,
-                                       command=new)
+                                           fg_color="#2b2b2b",
+                                           hover_color="#424242",
+                                           text="",
+                                           width=50,
+                                           image=img_new,
+                                           corner_radius=0,
+                                           command=new)
 
     bb_delete = ctk.CTkButton(branch_buttons, bg_color="#2b2b2b", 
-                                          fg_color="#2b2b2b", 
-                                          hover_color="#424242",
-                                          text="", width=50, 
-                                          image=img_delete, 
-                                          corner_radius=0,
-                                          command=delete)
+                                              fg_color="#2b2b2b", 
+                                              hover_color="#424242",
+                                              text="", width=50, 
+                                              image=img_delete, 
+                                              corner_radius=0,
+                                              command=delete)
 
     # Placing Buttons Frame
     branch_buttons.pack(side=ctk.TOP,
@@ -369,7 +361,6 @@ def main_app():
     bb_delete.grid(row=0,
                    column=3)
 
-
     # Treeview
     branchestyle = ttk.Style()
     branchestyle.theme_use("default")
@@ -380,52 +371,37 @@ def main_app():
                             rowheight=30,
                             font=("Terminal", 12),
                             borderwidth=0)
-
     branches = ttk.Treeview(exploreframe,
                             show="tree",
-                            selectmode=tkinter.BROWSE
-                            )
-
-
-    # Placing Treeview
+                            selectmode=tkinter.BROWSE)
     branches.pack(expand=True,
                   fill=ctk.BOTH)
 
-
     # Menu
     bb_menu = ctk.CTkOptionMenu(branch_buttons,
-                            bg_color="#2b2b2b",
-                            fg_color="#2b2b2b",
-                            button_color="#383838",
-                            button_hover_color="#424242",
-                            font=("Terminal", 12),
-                            dropdown_font=("Terminal", 12),
-                            corner_radius=0,
-                            values=["Root Branch", "Sub-Branch", "Note"])
-
-    # Placing Menu
+                                bg_color="#2b2b2b",
+                                fg_color="#2b2b2b",
+                                button_color="#383838",
+                                button_hover_color="#424242",
+                                font=("Terminal", 12),
+                                dropdown_font=("Terminal", 12),
+                                corner_radius=0,
+                                values=["Root Branch", "Sub-Branch", "Note"])
     bb_menu.grid(row=0,
                  column=0)
 
-
     # Textbox
     textbox = ctk.CTkTextbox(textframe,
-                         wrap=ctk.WORD,
-                         corner_radius=0,
-                         font=("Terminal", 17)) 
-
+                             wrap=ctk.WORD,
+                             corner_radius=0,
+                             font=("Terminal", 17)) 
 
     # Event Bindings
     branches.bind("<Triple-1>", rename)
-
     branches.bind("<ButtonRelease-1>", show_textbox)
-
     textbox.bind("<Key>", typing)
-
 
     # Loading data from database
     load()
-
     # Main application loop
     root.mainloop()
-
