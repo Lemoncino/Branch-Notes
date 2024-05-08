@@ -32,25 +32,32 @@ def pin():
 
     # Function to hash inserted PIN and store in database
     def hash_pin():
-        # Converting PIN to sequence of bytes for bcrypt function
-        pin = pin_entry.get().encode("utf-8")
+        #Checking if PIN contains only numeric characters and if it exceeds 30 characters
+        if pin_entry.get().isdigit():
+            if len(pin_entry.get()) <= 30:
+                # Converting PIN to sequence of bytes for bcrypt function
+                pin = pin_entry.get().encode("utf-8")
 
-        # Generating salt for hashing function
-        salt = bcrypt.gensalt()
+                # Generating salt for hashing function
+                salt = bcrypt.gensalt()
 
-        # Hashing PIN
-        hashed_pin = bcrypt.hashpw(pin, salt)
+                # Hashing PIN
+                hashed_pin = bcrypt.hashpw(pin, salt)
 
-        # Inserting PIN into database
-        db.execute("INSERT INTO pin (pin) VALUES (?)", (hashed_pin,))
-        connection.commit()
+                # Inserting PIN into database
+                db.execute("INSERT INTO pin (pin) VALUES (?)", (hashed_pin,))
+                connection.commit()
 
-        tkinter.messagebox.showinfo("Success", "Successfully created PIN.")
-        
-        # 1 second delay before opening recovery number page
-        time.sleep(1)
-        pin_frame.destroy()
-        recovery_number()
+                tkinter.messagebox.showinfo("Success", "Successfully created PIN.")
+                
+                # 1 second delay before opening recovery number page
+                time.sleep(1)
+                pin_frame.destroy()
+                recovery_number()
+            else:
+                tkinter.messagebox.showinfo("Error", "PIN is too long.\nMaximum characters: 30")
+        else:
+            tkinter.messagebox.showinfo("Error", "PIN must contain only numbers")
 
     # Function to generate random recovery number
     def recovery_number():

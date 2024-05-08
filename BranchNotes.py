@@ -5,7 +5,6 @@ Create branches, sub-branches, and organize your notes with your preferred hiera
 Features include renaming notes and branches, as well as automatic loading from the database.
 More features yet to come.
 """
-
 import tkinter.messagebox
 import customtkinter as ctk
 import tkinter
