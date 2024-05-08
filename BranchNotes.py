@@ -13,7 +13,7 @@ from PIL import Image
 import sqlite3
 
 # Connecting sqlite database
-connection = sqlite3.connect("databases/branches.db")
+connection = sqlite3.connect("database/branches.db")
 # Turning foreign key constraints on
 connection.execute("PRAGMA foreign_keys = ON")
 # Initializing cursor

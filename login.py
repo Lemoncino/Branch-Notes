@@ -12,7 +12,7 @@ import bcrypt
 import sqlite3
 
 # Connecting sqlite database
-connection = sqlite3.connect("databases/branches.db")
+connection = sqlite3.connect("database/branches.db")
 # Initializing cursor
 db = connection.cursor()
 
