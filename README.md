@@ -3,10 +3,29 @@
 ### Video:
 ![App Preview](images/app_preview_01.png)
 ## Description:
-Branch Notes is an intuitive application that allows the user to manage and organize study notes (Or any kind of notes) effortlessly. It lets you create hierarchical structures of branches and sub-branches, which allows you to structure and arrange your notes exactly as you wish.
+Branch Notes is a user-friendly application designed to streamline note management for any purpose. With Branch Notes, you can effortlessly organize your study notes (or any other type of notes) in a way that suits you best. The app empowers you to create custom hierarchical structures of branches and sub-branches, providing the flexibility to structure and arrange your notes precisely to your liking.
 ## Key Features:
-- **Custom Hierarchy**: You can customize the structure of your branches and notes however you want.
-- **Easy Note Management**: You can easily create and delete branches, sub-branches and notes directly in the application with the use of simple buttons.
-- **Quick Renaming**: You can quickly rename any branch, sub-branch or note my clicking on it three times, so accidental double clicks are not a problem.
-- **Dynamic text-editing**: You write and edit your notes directly within the application.
-- **Real-time saving**: Thanks to the integrated SQLite database, your notes automatically save 0.5ms after you stop typing, effectively removing the effort of having to use keybinds or buttons to save.
+- **Custom Hierarchy**: You can customize the structure of your branches and notes to your liking.
+- **Real-time saving**: Thanks to the integrated SQLite database, your notes are automatically saved 0.5ms after your last keystroke, effectively removing the effort of having to use keybinds or buttons to save your text.
+- **User Authentication**: The application utilizes a PIN to authenticate the user, protecting your notes from being snooped on.
+- **Recovery Options**: A random recovery number is generated, allowing the user to reset their PIN in case they forget it.
+## Techincal Details:
+### User Authentication:
+![PIN creation and recovery number](images/app_auth01.png)
+![Login and PIN reset](images/app_auth02.png)
+![App reset](images/app_auth03.png)
+### App Usage:
+![App usage](images/app_usage.png)
+### Code Overview:
+Branch Notes is written in **Python** and the GUI is made with **Tkinter** and **CustomTkinter**. A simple **SQLite3** database is integrated to store the user's data and **bcrypt** is used for secure hashing and verification.
+#### Modules:
+- **branchnotes.py** Contains the main application GUI and logic, from branch and note functionality to database operations for data storage and retrieval.
+- **login.py** Contains the GUI and logic for PIN creation, recovery number generation, login, PIN reset and the *last resort* application reset in case the user loses access to the recovery number.
+- **main.py** Simply starts the login function.
+#### SQLite database:
+![App database](images/app_database.png)
+
+
+
+
+
