@@ -228,7 +228,7 @@ def main_app():
             content = db.fetchone()
 
             # If content is present, insert into textbox
-            if content[0]:
+            if content[0] is not None:
                 text_content = content[0]
                 text_content = text_content.replace("{", "").replace("}", "")
                 textbox.insert("1.0", text_content)
