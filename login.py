@@ -338,7 +338,7 @@ def login():
                         
         # Label for page text
         forgot_label = ctk.CTkLabel(forgot_frame,
-                                   text="I forgot my PIN",
+                                   text="Branch Notes Reset PIN",
                                    font=("Terminal", 17))     
         forgot_label.pack()
 
