@@ -9,7 +9,7 @@ import tkinter.messagebox
 import customtkinter as ctk
 import tkinter
 from tkinter import ttk
-from PIL import Image, ImageTk
+from PIL import Image
 import sqlite3
 
 # Connecting sqlite database
