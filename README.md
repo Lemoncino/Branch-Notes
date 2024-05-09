@@ -1,6 +1,6 @@
 # Branch Notes
 
-### Video:
+### Video demonstration: https://www.youtube.com/watch?v=BopgBRYn1jo
 ![App Preview](images/readme/app_preview_01.png)
 ## Description:
 Branch Notes is a user-friendly application designed to streamline note management for any purpose. With Branch Notes, you can effortlessly organize your study notes (or any other type of notes) in a way that suits you best. The app empowers you to create custom hierarchical structures of branches and sub-branches, providing the flexibility to structure and arrange your notes precisely to your liking.
